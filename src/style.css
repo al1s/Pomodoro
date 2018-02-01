@@ -1,13 +1,103 @@
 body {
-  background-color: #fff;
+  background-image: linear-gradient(to right bottom, #eee, rgb(142, 241, 236));
   font-family: 'Exo 2', Lato, 'PT Sans', -apple-system, BlinkMacSystemFont,
     Roboto, Ubuntu, 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
   font-size: 1rem;
+  height: 100vh;
+  width: 100vw;
 }
+
+.clock {
+  /* border: 0.6rem solid #fff; */
+  height: 15rem;
+  width: 15rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.clock__controller {
+  background-color: #fff;
+  /* border: 0.3rem solid #fff; */
+  height: 0.7rem;
+  width: 2rem;
+}
+
+.clock__face {
+  /* background-color: rgb(255, 123, 0); */
+  background-color: rgb(255, 60, 0);
+  color: #eee;
+  border: 0.6rem solid #fff;
+  border-radius: 50%;
+  height: 10rem;
+  margin: 0.5rem auto;
+  position: relative;
+  width: 10rem;
+  z-index: 2;
+
+  /* height: 100%; */
+  /* width: 100%; */
+}
+
+.clock__controller {
+  position: relative;
+  border-radius: 50%;
+  height: 11rem;
+  width: 11rem;
+  /* box-shadow: inset 0 0 1px #888; */
+  border: 1px solid #ccc;
+  margin: 5rem auto;
+  cursor: pointer;
+  outline: none;
+  z-index: 1;
+}
+
+.clock__controller:focus {
+  /* box-shadow: inset 0 0 1px #04f; */
+  border: 1px solid rgb(255, 150, 0);
+  cursor: pointer;
+}
+
+.angle-input-pivot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  margin-top: -1px;
+  height: 2px;
+  z-index: 3;
+  /* background-color: #aaa; */
+}
+
+.clock__controller .angle-input-pivot::before {
+  content: '';
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  width: 15px;
+  margin-top: -6px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #fff;
+  /* box-shadow: 0 0 1px #888; */
+  border: 1px solid #ccc;
+}
+
+.clock__controller:focus .angle-input-pivot::before {
+  /* box-shadow: 0 0 1px #04f; */
+  border: 1px solid rgb(255, 150, 0);
+}
+
+.clock__countdown {
+}
+
+/* .clock__real-slider { 
+  left: -999px;
+  overflow: hidden;
+  position: absolute;
+}*/
 
 html {
   box-sizing: border-box;
-  height: 100%;
 }
 
 *,
