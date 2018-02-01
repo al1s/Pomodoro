@@ -22,16 +22,16 @@ const postcss = require('gulp-postcss');
 
 const dirs = {
   srcPath: './src/',
-  buildPath: './build/'
+  buildPath: './build/',
 };
 
 const copiedJs = [
-  './node_modules/whatwg-fetch/fetch.js',
-  './node_modules/es6-promise/dist/es6-promise.auto.js'
+  './node_modules/angle-input/dist/angle-input.js',
+  './node_modules/es6-promise/dist/es6-promise.auto.js',
 ];
 
 const postCssPlugins = [
-  autoprefixer({ browsers: ['last 2 version', 'Safari >= 8'] })//,
+  autoprefixer({ browsers: ['last 2 version', 'Safari >= 8'] }), //,
   // uncss({ html: [`${dirs.srcPath}/*.html`] })
   // mqpacker({
   //   sort: true
@@ -42,119 +42,140 @@ const postCssPlugins = [
 
 gulp.task('clean', () => {
   console.log('---------- Очистка папки сборки');
-  return del([
-    `${dirs.buildPath}/**/*`,
-    `!${dirs.buildPath}/readme.md`
-  ]);
+  return del([`${dirs.buildPath}/**/*`, `!${dirs.buildPath}/readme.md`]);
 });
 
 gulp.task('style', () => {
   const sourcemaps = require('gulp-sourcemaps');
   const wait = require('gulp-wait');
   console.log(dirs.srcPath + '/style.css');
-  return gulp.src(dirs.srcPath + '/style.css')
-    .pipe(plumber({
-      errorHandler: (err) => {
-        notify.onError({
-          title: 'Single style compilation error',
-          message: err.message
-        })(err);
-        this.emit('end');
-      }
-    }))
+  return gulp
+    .src(dirs.srcPath + '/style.css')
+    .pipe(
+      plumber({
+        errorHandler: err => {
+          notify.onError({
+            title: 'Single style compilation error',
+            message: err.message,
+          })(err);
+          this.emit('end');
+        },
+      }),
+    )
     .pipe(wait(100))
     .pipe(sourcemaps.init())
     .pipe(postcss(postCssPlugins))
     .pipe(cleanss())
     .pipe(sourcemaps.write('/'))
-    .pipe(size({
-      title: 'Размер',
-      showFiles: true,
-      showTotal: false,
-    }))
+    .pipe(
+      size({
+        title: 'Размер',
+        showFiles: true,
+        showTotal: false,
+      }),
+    )
     .pipe(gulp.dest(dirs.buildPath + '/css'))
     .pipe(browserSync.stream({ match: '**/*.css' }));
 });
 
 gulp.task('html', () => {
-  return gulp.src(dirs.srcPath + '/*.html')
-    .pipe(plumber({
-      errorHandler: (err) => {
-        notify.onError({
-          title: 'HTML compilation error',
-          message: err.message
-        })(err);
-        this.emit('end');
-      }
-    }))
+  return gulp
+    .src(dirs.srcPath + '/*.html')
+    .pipe(
+      plumber({
+        errorHandler: err => {
+          notify.onError({
+            title: 'HTML compilation error',
+            message: err.message,
+          })(err);
+          this.emit('end');
+        },
+      }),
+    )
     .pipe(gulp.dest(dirs.buildPath));
 });
 
-gulp.task('js',  () => {
+gulp.task('js', () => {
   const uglify = require('gulp-uglify');
   const concat = require('gulp-concat');
-  return gulp.src(dirs.srcPath + '/*.js')
+  return gulp
+    .src(dirs.srcPath + '/*.js')
     .pipe(sourcemaps.init())
-    .pipe(plumber({
-      errorHandler: (err) => {
-        notify.onError({
-          title: 'Javascript concat/uglify error',
-          message: err.message
-        })(err);
-        this.emit('end');
-      }
-    }))
-    .pipe(babel({
-      presets: ['env']
-    }))
+    .pipe(
+      plumber({
+        errorHandler: err => {
+          notify.onError({
+            title: 'Javascript concat/uglify error',
+            message: err.message,
+          })(err);
+          this.emit('end');
+        },
+      }),
+    )
+    .pipe(
+      babel({
+        presets: ['env'],
+      }),
+    )
     .pipe(uglify())
     .pipe(sourcemaps.write('.'))
-    .pipe(size({
-      title: 'Размер',
-      showFiles: true,
-      showTotal: false,
-    }))
-    .pipe(gulp.dest(dirs.buildPath + '/js'));
-});
-
-gulp.task('copy:js', (callback) => {
-  if (copiedJs.length) {
-    return gulp.src(copiedJs)
-      .pipe(size({
+    .pipe(
+      size({
         title: 'Размер',
         showFiles: true,
         showTotal: false,
-      }))
+      }),
+    )
+    .pipe(gulp.dest(dirs.buildPath + '/js'));
+});
+
+gulp.task('copy:js', callback => {
+  if (copiedJs.length) {
+    return gulp
+      .src(copiedJs)
+      .pipe(
+        size({
+          title: 'Размер',
+          showFiles: true,
+          showTotal: false,
+        }),
+      )
       .pipe(gulp.dest(dirs.buildPath + '/js'));
   } else callback();
 });
 
-gulp.task('img:opt',  (callback) => {
+gulp.task('img:opt', callback => {
   const imagemin = require('gulp-imagemin');
-  return gulp.src(dirs.srcPath + '/img/*.{jpg,jpeg,gif,png,svg}')
-    .pipe(image({
-      jpegRecompress: false//,
-    }))
+  return gulp
+    .src(dirs.srcPath + '/img/*.{jpg,jpeg,gif,png,svg}')
+    .pipe(
+      image({
+        jpegRecompress: false, //,
+      }),
+    )
     .pipe(gulp.dest(dirs.buildPath));
 });
 
 gulp.task('copy:img', () => {
-  return gulp.src(dirs.srcPath + '/img' + '/*.{jpg,jpeg,gif,png,svg}')
-    .pipe(newer(dirs.buildPath + '/img'))  // оставить в потоке только изменившиеся файлы
-    .pipe(size({
-      title: 'Размер',
-      showFiles: true,
-      showTotal: false,
-    }))
+  return gulp
+    .src(dirs.srcPath + '/img' + '/*.{jpg,jpeg,gif,png,svg}')
+    .pipe(newer(dirs.buildPath + '/img')) // оставить в потоке только изменившиеся файлы
+    .pipe(
+      size({
+        title: 'Размер',
+        showFiles: true,
+        showTotal: false,
+      }),
+    )
     .pipe(gulp.dest(dirs.buildPath + '/img'));
 });
 
-gulp.task('build', (callback) => {
+gulp.task('build', callback => {
   gulpSequence(
     'clean',
     ['style', 'js', 'copy:js', 'copy:img'],
     'html',
-    callback
+    callback,
   );
 });
 
@@ -162,8 +183,7 @@ gulp.task('build', (callback) => {
 gulp.task('deploy', () => {
   const ghPages = require('gulp-gh-pages');
   console.log('---------- Публикация содержимого ./build/ на GH pages');
-  return gulp.src(dirs.buildPath + '**/*')
-    .pipe(ghPages());
+  return gulp.src(dirs.buildPath + '**/*').pipe(ghPages());
 });
 
 // Задача по умолчанию
@@ -183,10 +203,11 @@ gulp.task('serve', ['build'], () => {
     gulp.watch(copiedJs, ['watch:copy:js']);
   }
   // Слежение за html
-  gulp.watch([
-    '*.html',
-    dirs.blocksDirName + '/**/*.html'
-  ], { cwd: dirs.srcPath }, ['watch:html']);
+  gulp.watch(
+    ['*.html', dirs.blocksDirName + '/**/*.html'],
+    { cwd: dirs.srcPath },
+    ['watch:html'],
+  );
   // Слежение за JS
   gulp.watch(dirs.srcPath + '/*.js', ['watch:js']);
 });
