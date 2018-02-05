@@ -88,10 +88,11 @@ body {
 }
 
 .clock__display {
+  font-size: 1.2rem;
   height: 1.5rem;
-  left: 40%;
+  left: 35%;
   position: relative;
-  top: 50%;
+  top: 40%;
   width: 2rem;
 }
 
