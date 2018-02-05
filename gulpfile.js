@@ -25,10 +25,7 @@ const dirs = {
   buildPath: './build/',
 };
 
-const copiedJs = [
-  './node_modules/angle-input/dist/angle-input.js',
-  './node_modules/es6-promise/dist/es6-promise.auto.js',
-];
+const copiedJs = ['./node_modules/angle-input/dist/angle-input.js'];
 
 const postCssPlugins = [
   autoprefixer({ browsers: ['last 2 version', 'Safari >= 8'] }), //,

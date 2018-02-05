@@ -87,7 +87,12 @@ body {
   border: 1px solid rgb(255, 150, 0);
 }
 
-.clock__countdown {
+.clock__display {
+  height: 1.5rem;
+  left: 40%;
+  position: relative;
+  top: 50%;
+  width: 2rem;
 }
 
 /* .clock__real-slider { 

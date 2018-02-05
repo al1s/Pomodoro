@@ -1,4 +1,4 @@
-Approach to the exercise - https://www.freecodecamp.org/challenges/build-a-pomodoro-clock
+Approach to the learning project - https://www.freecodecamp.org/challenges/build-a-pomodoro-clock
 
 User Story: I can start a 25 minute pomodoro, and the timer will go off once 25 minutes has elapsed.
 
