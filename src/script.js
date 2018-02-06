@@ -10,7 +10,7 @@
 // +TODO: visualize chosen interval by printing its length on the clockface;
 // TODO: visualize movements of the controller handler by adjusting interval length;
 // +TODO: show notification on timer ending;
-// TODO: prevent starting new pomodoro on repeating clicks on the clockface if we already run;
+// +TODO: prevent starting new pomodoro on repeating clicks on the clockface if we already run;
 // TODO: hide controller on Pomodoro start and show on reset;
 
 var UI = {
