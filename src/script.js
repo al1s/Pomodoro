@@ -17,7 +17,9 @@ var UI = {
   listen() {
     this.notifyUser = this.notifyUser.bind(this);
     this.timerToDisplay = this.timerToDisplay.bind(this);
+    this.changeUIStyle = this.changeUIStyle.bind(this);
 
+    this.changeUIStyle();
     // these are the defaults
     this.options = {
       max: 360, // maximum value
@@ -27,15 +29,27 @@ var UI = {
     };
 
     this.controller = document.querySelector('#clockController');
-    this.angle = AngleInput(this.controller, this.options);
-    this.angle(this.controllerPosition); // set controller position;
-
     this.clockDisplay = document.querySelector('#clockDisplay');
     this.clockface = document.querySelector('.clock__face');
+
+    this.angle = AngleInput(this.controller, this.options);
+    this.angle(this.controllerPosition); // set controller position;
+    this.timerToDisplay(this.defaultTimer, 0);
+
+    this.controller.oninput = e => {
+      this.timerToDisplay(this.gradToMinutes(this.angle()), 0);
+      e.stopPropagation();
+      e.preventDefault();
+    };
+
     this.clockface.onmousedown = e => {
       // console.log(e);
       this.clickHandler(this.gradToMinutes(this.angle()) * 60);
       e.stopPropagation();
+    };
+
+    this.controller.onclick = e => {
+      console.log(e);
     };
   },
 
@@ -56,6 +70,16 @@ var UI = {
       (String(seconds).length !== 2 ? '0' : '') +
       seconds;
   },
+
+  changeUIStyle(newTheme) {
+    var body = document.querySelector('body');
+    var currentTheme = body.dataset.theme;
+    body.classList.toggle(`${currentTheme}`);
+    if (newTheme) {
+      body.classList.add(`--${newTheme}`);
+      body.dataset.theme = `--${newTheme}`;
+    }
+  },
 };
 
 var Application = {
@@ -69,7 +93,8 @@ var Application = {
     this.paused = false;
     this.defaultTimer = 1; // default pomodoro timeout in minutes;
     this.timeLeft = this.defaultTimer * 60;
-    this.controllerPosition = this.minutesToGrad(this.defaultTimer);
+    // this.controllerPosition = this.minutesToGrad(this.defaultTimer);
+    this.controllerPosition = this.minutesToGrad(this.timeLeft);
   },
 
   syncTimerDisplay(timeout) {
@@ -82,11 +107,13 @@ var Application = {
       var minutesLeft = Math.floor(this.timeLeft / 60);
       var secondsLeft = this.timeLeft - minutesLeft * 60;
       this.timerToDisplay(minutesLeft, secondsLeft);
+      var controllerPosition = this.minutesToGrad(this.timeLeft);
+      console.log(controllerPosition);
+      this.angle(controllerPosition); // set controller position;
     }
   },
 
   clickHandler(timeout) {
-    console.log('clicked');
     console.log(`timeLeft=${this.timeLeft}`);
     console.log(`paused=${this.paused}`);
 
@@ -109,6 +136,7 @@ var Application = {
     this.startTime = Date.now();
     this.redrawProcessId = setInterval(this.syncTimerDisplay, 1000, timeout);
     this.timerProcessId = setTimeout(this.endTimer, timeout * 1000 + 100);
+    this.changeUIStyle('running');
   },
 
   endTimer() {
@@ -116,6 +144,8 @@ var Application = {
     clearInterval(this.redrawProcessId);
     clearTimeout(this.timerProcessId);
     if (this.notificationGranted) this.notifyUser('Pomodoro', 'Time ended');
+    this.timerProcessId = undefined;
+    this.changeUIStyle('stopped');
   },
 
   pauseTimer() {
@@ -123,19 +153,30 @@ var Application = {
     clearTimeout(this.timerProcessId);
     this.timerProcessId = undefined;
     this.paused = true;
+    this.changeUIStyle('paused');
   },
 
   resetTimer() {
     this.minutesLeft = this.defaultTimer;
     this.secondsLeft = 0;
-    this.timerToDisplay(this.minutesLeft);
-    if (this.timer) clearInterval(this.timer);
+    this.timerToDisplay(this.minutesLeft, this.secondsLeft);
+    this.endTimer();
   },
 
+  minutesToGrad(seconds) {
+    var result;
+    if (seconds >= 0 && seconds <= 15 * 60) {
+      result = 360 - Math.floor((seconds + 60 * 60) / 10) + 90;
+    } else result = 360 - Math.floor(seconds / 10) + 90;
+    return result;
+  },
+
+  /*
   minutesToGrad(minutes) {
-    if (minutes >= 0 && minutes <= 15) minutes += 60;
+    if (minutes >= 0 && minutes <= 15) return 360 - (minutes + 60) * 6 + 90;
     return 360 - minutes * 6 + 90;
   },
+  */
 
   gradToMinutes(grad) {
     var converted = (360 - grad + 90) / 6;
