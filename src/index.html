@@ -11,11 +11,19 @@
 
 <body data-theme="--stopped">
   <div class="clock">
-    <div class="clock__controller" id="clockController">
-      <div class="clock__face">
-        <span class="clock__display" id="clockDisplay">
-
-        </span>
+    <div class="clock__controller" id="clockController"> </div>
+    <div class="clock__face">
+      <span class="clock__display" id="clockDisplay"></span>
+      <!-- <div class="btn btn__pause" id="btnPause"></div> -->
+      <div class="playpause__wrapper">
+        <input type="checkbox" value="None" id="inputPause" name="check" checked />
+        <div class="btn  btn__pause">
+          <label id="btnPause" for="inputPause" tabindex="1"></label>
+        </div>
+      </div>
+      <div class="stop__wrapper">
+        <input type="checkbox" value="None" id="inputStop" name="check" checked />
+        <label class="btn btn__stop" id="btnStop" for="inputStop" tabindex="1"></label>
       </div>
     </div>
   </div>

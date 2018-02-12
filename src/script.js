@@ -5,19 +5,33 @@
 /* eslint prefer-const: 0 */
 /* eslint arrow-parens: 0 */
 
-// TODO: start Pomodoro on clockface click or Enter press;
-// TODO: reset Pomodoro on double click or Delete (Backspace);
+// +-TODO: start Pomodoro on clockface click or Enter press;
+// +-TODO: reset Pomodoro on double click or Delete (Backspace);
 // +TODO: visualize chosen interval by printing its length on the clockface;
 // TODO: visualize movements of the controller handler by adjusting interval length;
 // +TODO: show notification on timer ending;
 // +TODO: prevent starting new pomodoro on repeating clicks on the clockface if we already run;
-// TODO: hide controller on Pomodoro start and show on reset;
+// -TODO: hide controller on Pomodoro start and show on reset;
+// +TODO: prevent changing controller position when timer either running or paused;
+// TODO: make controller handler follow countdown timer smoothly;
+// +FIX: multiple timers run on start timer repeating clicks;
 
 var UI = {
   listen() {
+    this.controller = document.querySelector('#clockController');
+    this.clockDisplay = document.querySelector('#clockDisplay');
+    this.clockface = document.querySelector('.clock__face');
+    this.inputPause = document.querySelector('#inputPause');
+    this.inputStop = document.querySelector('#inputStop');
+    this.btnPause = document.querySelector('#btnPause');
+    this.btnStop = document.querySelector('#btnStop');
+
     this.notifyUser = this.notifyUser.bind(this);
-    this.timerToDisplay = this.timerToDisplay.bind(this);
+    this.showTimeLeft = this.showTimeLeft.bind(this);
     this.changeUIStyle = this.changeUIStyle.bind(this);
+    this.controllerPosition = this.minutesToGrad(this.timeLeft);
+    this.paused = this.inputPause.checked;
+    this.stopped = this.inputStop.checked;
 
     this.changeUIStyle();
     // these are the defaults
@@ -28,28 +42,40 @@ var UI = {
       name: 'clock-controller', // used for <input name>
     };
 
-    this.controller = document.querySelector('#clockController');
-    this.clockDisplay = document.querySelector('#clockDisplay');
-    this.clockface = document.querySelector('.clock__face');
-
     this.angle = AngleInput(this.controller, this.options);
     this.angle(this.controllerPosition); // set controller position;
-    this.timerToDisplay(this.defaultTimer, 0);
+    this.showTimeLeft(this.timeLeft); // set digital display to default pomodoro value;
 
     this.controller.oninput = e => {
-      this.timerToDisplay(this.gradToMinutes(this.angle()), 0);
       e.stopPropagation();
-      e.preventDefault();
-    };
-
-    this.clockface.onmousedown = e => {
-      // console.log(e);
-      this.clickHandler(this.gradToMinutes(this.angle()) * 60);
-      e.stopPropagation();
+      console.log('controller input');
+      console.log(`stopped=${this.inputStop.checked}`);
+      if (this.inputStop.checked) {
+        this.timeLeft = this.gradToMinutes(this.angle()) * 60;
+        this.showTimeLeft(this.timeLeft);
+      }
     };
 
     this.controller.onclick = e => {
-      console.log(e);
+      if (this.inputStop.checked) {
+        e.stopPropagation();
+        console.log('controller clicked');
+        console.log(`stopped=${this.inputStop.checked}`);
+        this.timeLeft = this.gradToMinutes(this.angle()) * 60;
+        this.showTimeLeft(this.timeLeft);
+      }
+    };
+
+    this.btnPause.onclick = e => {
+      e.stopPropagation();
+      console.log('Pause clicked');
+      this.clickHandler(e);
+    };
+
+    this.btnStop.onclick = e => {
+      e.stopPropagation();
+      console.log('Stop clicked');
+      this.clickHandler(e);
     };
   },
 
@@ -62,13 +88,38 @@ var UI = {
     setTimeout(n.close.bind(n), 5000);
   },
 
-  timerToDisplay(minutes, seconds) {
+  showTimeLeft(timeInSecondsLeft) {
+    var minutesLeft = Math.floor(timeInSecondsLeft / 60);
+    var secondsLeft = timeInSecondsLeft - minutesLeft * 60;
+    console.log(
+      `timeLeft=${timeInSecondsLeft}, min=${minutesLeft}, sec=${secondsLeft}`,
+    );
     this.clockDisplay.innerText =
-      (String(minutes).length !== 2 ? '0' : '') +
-      minutes +
+      (String(minutesLeft).length !== 2 ? '0' : '') +
+      minutesLeft +
       ':' +
-      (String(seconds).length !== 2 ? '0' : '') +
-      seconds;
+      (String(secondsLeft).length !== 2 ? '0' : '') +
+      secondsLeft;
+  },
+
+  changeUIState(newState) {
+    console.log(`stopped=${this.inputStop.checked}`);
+    if (newState === 'stopped') {
+      this.showTimeLeft(this.timeLeft);
+      this.inputPause.checked = true; // change play/pause button appearance;
+      this.inputStop.checked = true;
+      this.angle(this.controllerPosition); // set controller position;
+      this.changeUIStyle(newState);
+    } else if (newState === 'running') {
+      this.changeUIStyle(newState);
+      this.inputStop.checked = false;
+    } else if (newState === 'paused') {
+      this.changeUIStyle(newState);
+      this.inputStop.checked = false;
+    } else if (newState === 'tick') {
+      this.showTimeLeft(this.timeLeft);
+      this.angle(this.controllerPosition); // set controller position;
+    }
   },
 
   changeUIStyle(newTheme) {
@@ -84,83 +135,73 @@ var UI = {
 
 var Application = {
   init() {
+    this.clickHandler = this.clickHandler.bind(this);
+    this.syncTimerDisplay = this.syncTimerDisplay.bind(this);
     this.startTimer = this.startTimer.bind(this);
     this.resetTimer = this.resetTimer.bind(this);
     this.endTimer = this.endTimer.bind(this);
     this.minutesToGrad = this.minutesToGrad.bind(this);
-    this.syncTimerDisplay = this.syncTimerDisplay.bind(this);
-    this.clickHandler = this.clickHandler.bind(this);
-    this.paused = false;
-    this.defaultTimer = 1; // default pomodoro timeout in minutes;
+    this.gradToMinutes = this.gradToMinutes.bind(this);
+    this.defaultTimer = 25; // default pomodoro timeout in minutes;
     this.timeLeft = this.defaultTimer * 60;
-    // this.controllerPosition = this.minutesToGrad(this.defaultTimer);
-    this.controllerPosition = this.minutesToGrad(this.timeLeft);
   },
 
   syncTimerDisplay(timeout) {
     var elapsed = Date.now() - this.startTime;
     this.timeLeft = timeout - Math.floor(elapsed / 1000);
-    console.log(
-      `elapsed=${elapsed}, timeout=${timeout}, timeLeft=${this.timeLeft}`,
-    );
     if (this.timeLeft >= 0) {
-      var minutesLeft = Math.floor(this.timeLeft / 60);
-      var secondsLeft = this.timeLeft - minutesLeft * 60;
-      this.timerToDisplay(minutesLeft, secondsLeft);
-      var controllerPosition = this.minutesToGrad(this.timeLeft);
-      console.log(controllerPosition);
-      this.angle(controllerPosition); // set controller position;
+      this.changeUIState('tick');
     }
   },
 
-  clickHandler(timeout) {
-    console.log(`timeLeft=${this.timeLeft}`);
-    console.log(`paused=${this.paused}`);
-
-    if (this.timerProcessId) this.pauseTimer();
-    else if (this.paused) {
-      console.log('in resume processing');
-      this.paused = false;
-      this.startTimer(this.timeLeft);
-    } else this.startTimer(timeout);
+  clickHandler(e) {
+    if (e.target.id === 'btnPause') {
+      console.log(`timeLeft=${this.timeLeft}`);
+      if (this.timerProcessId) this.pauseTimer();
+      else this.startTimer(this.timeLeft);
+    } else if (e.target.id === 'btnStop') {
+      this.resetTimer();
+    }
   },
 
   startTimer(timeout) {
     if (Notification) {
       Notification.requestPermission().then(result => {
-        if (result === 'denied') console.log('Not granted');
-        else if (result === 'default') console.log('Not default');
+        if (result === 'denied') console.log('Notification are not granted');
+        else if (result === 'default')
+          console.log('Notifications are not set to default');
         else this.notificationGranted = true;
       });
     }
     this.startTime = Date.now();
     this.redrawProcessId = setInterval(this.syncTimerDisplay, 1000, timeout);
     this.timerProcessId = setTimeout(this.endTimer, timeout * 1000 + 100);
-    this.changeUIStyle('running');
+    this.changeUIState('running');
   },
 
   endTimer() {
-    // console.log('Time ended!');
-    clearInterval(this.redrawProcessId);
-    clearTimeout(this.timerProcessId);
+    this.cleanAsyncTimers();
     if (this.notificationGranted) this.notifyUser('Pomodoro', 'Time ended');
-    this.timerProcessId = undefined;
-    this.changeUIStyle('stopped');
+    else alert('Time ended');
+    this.changeUIState('stopped');
   },
 
   pauseTimer() {
-    clearInterval(this.redrawProcessId);
-    clearTimeout(this.timerProcessId);
-    this.timerProcessId = undefined;
-    this.paused = true;
+    this.cleanAsyncTimers();
     this.changeUIStyle('paused');
   },
 
   resetTimer() {
-    this.minutesLeft = this.defaultTimer;
-    this.secondsLeft = 0;
-    this.timerToDisplay(this.minutesLeft, this.secondsLeft);
-    this.endTimer();
+    this.cleanAsyncTimers();
+    this.timeLeft = this.defaultTimer * 60;
+    this.changeUIState('stopped');
+  },
+
+  cleanAsyncTimers() {
+    clearInterval(this.redrawProcessId);
+    clearTimeout(this.timerProcessId);
+    this.timerProcessId = undefined;
+    this.redrawProcessId = undefined;
   },
 
   minutesToGrad(seconds) {
@@ -170,13 +211,6 @@ var Application = {
     } else result = 360 - Math.floor(seconds / 10) + 90;
     return result;
   },
-
-  /*
-  minutesToGrad(minutes) {
-    if (minutes >= 0 && minutes <= 15) return 360 - (minutes + 60) * 6 + 90;
-    return 360 - minutes * 6 + 90;
-  },
-  */
 
   gradToMinutes(grad) {
     var converted = (360 - grad + 90) / 6;
