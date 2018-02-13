@@ -28,10 +28,8 @@ var UI = {
 
     this.notifyUser = this.notifyUser.bind(this);
     this.showTimeLeft = this.showTimeLeft.bind(this);
+    this.changeUIState = this.changeUIState.bind(this);
     this.changeUIStyle = this.changeUIStyle.bind(this);
-    this.controllerPosition = this.minutesToGrad(this.timeLeft);
-    this.paused = this.inputPause.checked;
-    this.stopped = this.inputStop.checked;
 
     this.changeUIStyle();
     // these are the defaults
@@ -43,13 +41,13 @@ var UI = {
     };
 
     this.angle = AngleInput(this.controller, this.options);
-    this.angle(this.controllerPosition); // set controller position;
+    this.angle(this.getControllerPosition()); // set controller position;
     this.showTimeLeft(this.timeLeft); // set digital display to default pomodoro value;
 
     this.controller.oninput = e => {
       e.stopPropagation();
       console.log('controller input');
-      console.log(`stopped=${this.inputStop.checked}`);
+      console.log(`51. stopped=${this.inputStop.checked}`);
       if (this.inputStop.checked) {
         this.timeLeft = this.gradToMinutes(this.angle()) * 60;
         this.showTimeLeft(this.timeLeft);
@@ -57,10 +55,10 @@ var UI = {
     };
 
     this.controller.onclick = e => {
+      e.stopPropagation();
+      console.log('controller clicked');
+      console.log(`61. stopped=${this.inputStop.checked}`);
       if (this.inputStop.checked) {
-        e.stopPropagation();
-        console.log('controller clicked');
-        console.log(`stopped=${this.inputStop.checked}`);
         this.timeLeft = this.gradToMinutes(this.angle()) * 60;
         this.showTimeLeft(this.timeLeft);
       }
@@ -74,9 +72,14 @@ var UI = {
 
     this.btnStop.onclick = e => {
       e.stopPropagation();
+      e.preventDefault(); // need this to prevent inputStop toggling on second press on stop btn
       console.log('Stop clicked');
       this.clickHandler(e);
     };
+  },
+
+  getControllerPosition() {
+    return this.minutesToGrad(this.timeLeft);
   },
 
   notifyUser(title, body) {
@@ -103,22 +106,27 @@ var UI = {
   },
 
   changeUIState(newState) {
-    console.log(`stopped=${this.inputStop.checked}`);
+    console.log(`105. stopped=${this.inputStop.checked}`);
     if (newState === 'stopped') {
+      console.log(`in ${newState} state`);
       this.showTimeLeft(this.timeLeft);
       this.inputPause.checked = true; // change play/pause button appearance;
       this.inputStop.checked = true;
-      this.angle(this.controllerPosition); // set controller position;
+      console.log(`111. stopped=${this.inputStop.checked}`);
+      this.angle(this.getControllerPosition()); // set controller position;
       this.changeUIStyle(newState);
     } else if (newState === 'running') {
+      console.log(`in ${newState} state`);
       this.changeUIStyle(newState);
       this.inputStop.checked = false;
     } else if (newState === 'paused') {
+      console.log(`in ${newState} state`);
       this.changeUIStyle(newState);
       this.inputStop.checked = false;
     } else if (newState === 'tick') {
+      console.log(`in ${newState} state`);
       this.showTimeLeft(this.timeLeft);
-      this.angle(this.controllerPosition); // set controller position;
+      this.angle(this.getControllerPosition()); // set controller position;
     }
   },
 

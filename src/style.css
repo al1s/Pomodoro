@@ -72,10 +72,14 @@ input[type='checkbox'] {
   left: -9999px;
 }
 
-.playpause input[type='checkbox']:checked + .btn__pause label {
+.playpause__wrapper input[type='checkbox']:checked + .btn__pause label {
   border-style: solid;
   border-width: 8px 0 8px 15px;
 }
+
+/* .playpause__wrapper input[type='checkbox'] { 
+ left: -10px; 
+ } */
 
 /*
 .playpause input[type='checkbox']:focus + .btn__pause label {
